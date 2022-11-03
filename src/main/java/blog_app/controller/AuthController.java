@@ -1,7 +1,9 @@
 package blog_app.controller;
 
+import blog_app.Security.JwtTokenProvider;
 import blog_app.entity.Role;
 import blog_app.entity.User;
+import blog_app.payload.JwtAuthResponse;
 import blog_app.payload.LoginDto;
 import blog_app.payload.SignUpDto;
 import blog_app.repository.RoleRepository;
@@ -24,27 +26,26 @@ import java.util.Collections;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-
     @Autowired
     private AuthenticationManager authenticationManager;
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private RoleRepository roleRepository;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtTokenProvider tokenProvider;
 
 
     @PostMapping("/signin")
-    public ResponseEntity<String>authenticateUser(@RequestBody LoginDto loginDto){
+    public ResponseEntity<JwtAuthResponse>authenticateUser(@RequestBody LoginDto loginDto){
        Authentication authentication= authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 loginDto.getUserNameOrEmail(),loginDto.getPassword()));
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return new ResponseEntity<>("User signed-in Successfully!.", HttpStatus.OK);
+        //getToken from
+        String token =tokenProvider.generateToken(authentication);
+        return  ResponseEntity.ok(new JwtAuthResponse(token));
     }
 
     @PostMapping("/signUp")
